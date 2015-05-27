@@ -210,12 +210,26 @@ module.exports = function (source) {
 
     res.status(200).jsonp({})
   }
+  // DELETE /:resource?ids=1&ids=3&ids=4
+  function destroyBatch (req, res, next) {
+    _.each(req.query.ids, function (id) {
+      id = parseInt(id, 0)
+      db(req.params.resource).remove(utils.toNative(id))
+      // Remove dependents documents
+      var removable = utils.getRemovable(db.object)
+      _.each(removable, function (item) {
+        db(item.name).remove(item.id)
+      })
+    })
+    res.status(200).jsonp({})
+  }
 
   router.get('/db', showDatabase)
 
   router.route('/:resource')
     .get(list)
     .post(create)
+    .delete(destroyBatch)
 
   router.route('/:resource/:id')
     .get(show)

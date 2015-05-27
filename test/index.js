@@ -15,7 +15,9 @@ describe('Server', function () {
 
     db.posts = [
       {id: 1, body: 'foo'},
-      {id: 2, body: 'bar'}
+      {id: 2, body: 'bar'},
+      {id: 3, body: 'bar3'},
+      {id: 4, body: 'bar4'}
     ]
 
     db.tags = [
@@ -232,11 +234,11 @@ describe('Server', function () {
           .post('/posts')
           .send({body: 'foo', booleanValue: 'true', integerValue: '1'})
           .expect('Content-Type', /json/)
-          .expect({id: 3, body: 'foo', booleanValue: true, integerValue: 1})
+          .expect({id: 5, body: 'foo', booleanValue: true, integerValue: 1})
           .expect(201)
           .end(function (err, res) {
             if (err) return done(err)
-            assert.equal(db.posts.length, 3)
+            assert.equal(db.posts.length, 5)
             done()
           })
       })
@@ -307,7 +309,6 @@ describe('Server', function () {
         .expect(404, done)
     })
   })
-
   describe('DELETE /:resource/:id', function () {
     it('should respond with empty data, destroy resource and dependent resources', function (done) {
       request(server)
@@ -316,6 +317,22 @@ describe('Server', function () {
         .expect(200)
         .end(function (err, res) {
           if (err) return done(err)
+          assert.equal(db.posts.length, 3)
+          assert.equal(db.comments.length, 3)
+          done()
+        })
+    })
+  })
+
+  describe('DELETE /:resource?ids=1&ids=3&ids=4', function () {
+    it('should respond with empty data, destroy resource and dependent resources', function (done) {
+      request(server)
+        .del('/posts?ids=1&ids=3&ids=4')
+        .expect({})
+        .expect(200)
+        .end(function (err, res) {
+          if (err) return done(err)
+          console.log(db.posts)
           assert.equal(db.posts.length, 1)
           assert.equal(db.comments.length, 3)
           done()
